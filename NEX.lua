@@ -1,13 +1,15 @@
--- [[ TOOLALL MM2 - NEX: UPDATE COLOR ESP & CHAIN KILL & FLY & AURA ]]
+-- [[ TOOLALL MM2 - NEX HUB: MODERN MINI BUTTON EDITION ]]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 local MiniButton = Instance.new("TextButton", ScreenGui) 
 local UIStroke = Instance.new("UIStroke", MainFrame)
 local MiniStroke = Instance.new("UIStroke", MiniButton)
+local MiniCorner = Instance.new("UICorner", MiniButton)
+local MiniGradient = Instance.new("UIGradient", MiniButton)
 
--- 1. GIAO DIỆN NEX
+-- 1. GIAO DIỆN CHÍNH (GIỮ NGUYÊN)
 MainFrame.Name = "NEX_Final_Color"
-MainFrame.Size = UDim2.new(0, 300, 0, 390) -- Tăng một chút để đủ chỗ 5 nút
+MainFrame.Size = UDim2.new(0, 300, 0, 390)
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -195)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Visible = false 
@@ -39,11 +41,9 @@ local function CreateToggle(name, pos, var)
         btn.BackgroundColor3 = _G[var] and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
         btn.Text = name .. (_G[var] and ": BẬT" or ": TẮT")
         
-        -- Kích hoạt Fly khi bấm nút
         if var == "UseFly" and _G.UseFly then
             loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-55253"))()
         elseif var == "UseFly" and not _G.UseFly then
-            -- Tắt Fly (tùy bản script fly hỗ trợ)
             if game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
                 game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
             end
@@ -51,34 +51,46 @@ local function CreateToggle(name, pos, var)
     end)
 end
 
--- THÊM CÁC NÚT (Giữ đúng kiểu CreateToggle của ông)
 CreateToggle("ESP Soi Vai Trò", UDim2.new(0, 20, 0, 30), "UseESP")
 CreateToggle("Chain Kill (Dịch Chuyển)", UDim2.new(0, 20, 0, 90), "UseMurd")
 CreateToggle("Kill Aura (Tầm Xa 400)", UDim2.new(0, 20, 0, 150), "UseAura")
 CreateToggle("Nhặt Súng Từ Xa", UDim2.new(0, 20, 0, 210), "UseLoot")
 CreateToggle("Kích Hoạt Bay (Fly)", UDim2.new(0, 20, 0, 270), "UseFly")
 
--- 2. NÚT NEX CHỮ ĐẸP
-MiniButton.Name = "NEX_Toggle"
-MiniButton.Size = UDim2.new(0, 60, 0, 40)
+-- 2. NÚT NEX MODERNIZE (THAY ĐỔI TẠI ĐÂY)
+MiniButton.Name = "NEX_Modern_Toggle"
+MiniButton.Size = UDim2.new(0, 60, 0, 60) -- Kích thước tròn
 MiniButton.Position = UDim2.new(0, 20, 0.2, 0)
-MiniButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MiniButton.BackgroundColor3 = Color3.new(1, 1, 1)
 MiniButton.Text = "NEX"
 MiniButton.TextColor3 = Color3.new(1, 1, 1)
 MiniButton.Font = Enum.Font.LuckiestGuy
 MiniButton.TextSize = 20
 MiniButton.Visible = true
 MiniButton.Draggable = true
-Instance.new("UICorner", MiniButton).CornerRadius = UDim.new(0, 8)
-MiniStroke.Thickness = 2
-MiniButton.Parent = ScreenGui
 
-MiniButton.MouseButton1Click:Connect(function() MainFrame.Visible = true; MiniButton.Visible = false end)
+MiniCorner.CornerRadius = UDim.new(1, 0) -- Làm tròn hoàn toàn
+MiniStroke.Thickness = 3
+MiniGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 50, 255)), -- Tím
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 200, 255))  -- Xanh biển
+}
+
+MiniButton.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = not MainFrame.Visible
+    MiniButton.Visible = not MainFrame.Visible
+end)
+
 local CloseBtn = Instance.new("TextButton", MainFrame)
-CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.Text = "_"
-CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false; MiniButton.Visible = true end)
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.Position = UDim2.new(1, -30, 0, 5)
+CloseBtn.Text = "_"
+CloseBtn.MouseButton1Click:Connect(function() 
+    MainFrame.Visible = false 
+    MiniButton.Visible = true 
+end)
 
--- 3. HÀM KIỂM TRA ADMIN
+-- 3. HÀM KIỂM TRA ADMIN (GIỮ NGUYÊN)
 local function IsAdmin(player)
     if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then
         return true
@@ -86,7 +98,7 @@ local function IsAdmin(player)
     return false
 end
 
--- 4. VÒNG LẶP XỬ LÝ CHÍNH
+-- 4. VÒNG LẶP XỬ LÝ CHÍNH (GIỮ NGUYÊN TOÀN BỘ)
 spawn(function()
     while task.wait(0.01) do
         pcall(function()
@@ -94,7 +106,6 @@ spawn(function()
             local char = lp.Character
             if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
-            -- KILL AURA 400M (Thêm vào vòng lặp của ông)
             if _G.UseAura then
                 local tool = char:FindFirstChildOfClass("Tool")
                 if tool then
@@ -116,7 +127,6 @@ spawn(function()
                 end
             end
 
-            -- CHAIN KILL THEO LƯỢT (Giữ nguyên)
             if _G.UseMurd then
                 local knife = lp.Backpack:FindFirstChild("Knife") or char:FindFirstChild("Knife")
                 if knife then
@@ -138,7 +148,6 @@ spawn(function()
                 end
             end
 
-            -- ESP VỚI MÀU SẮC YÊU CẦU (Giữ nguyên)
             if _G.UseESP then
                 for _, p in pairs(game.Players:GetPlayers()) do
                     if p ~= lp and p.Character then
@@ -155,7 +164,6 @@ spawn(function()
                 end
             end
 
-            -- NHẶT SÚNG TỪ XA (Giữ nguyên)
             if _G.UseLoot then
                 for _, v in pairs(game.Workspace:GetDescendants()) do
                     if v.Name == "GunDrop" or v.Name == "GunHandle" then
