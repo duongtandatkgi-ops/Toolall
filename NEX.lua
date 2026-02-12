@@ -1,4 +1,4 @@
--- [[ TOOLALL MM2 - NEX HUB: ANTI-KICK & ANTI-FLING EDITION ]]
+-- [[ TOOLALL MM2 - NEX HUB: COMPACT SCROLL EDITION ]]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 local MiniButton = Instance.new("TextButton", ScreenGui) 
@@ -7,16 +7,16 @@ local MiniStroke = Instance.new("UIStroke", MiniButton)
 local MiniCorner = Instance.new("UICorner", MiniButton)
 local MiniGradient = Instance.new("UIGradient", MiniButton)
 
--- KHAI BÁO BIẾN CHO TÍNH NĂNG MỚI
+-- KHAI BÁO BIẾN CHO TÍNH NĂNG MỚI (GIỮ NGUYÊN)
 local TweenService = game:GetService("TweenService")
 local CurrentTween = nil
 _G.IsAutoFarming = false
 _G.AntiFling = false
 
--- 1. GIAO DIỆN CHÍNH (ĐÃ TĂNG SIZE ĐỂ CHỨA THÊM NÚT)
+-- 1. GIAO DIỆN CHÍNH (ĐÃ LÀM NGẮN LẠI)
 MainFrame.Name = "NEX_Final_Color"
-MainFrame.Size = UDim2.new(0, 300, 0, 510) -- Tăng chiều cao
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -255)
+MainFrame.Size = UDim2.new(0, 300, 0, 350) -- Chiều cao thu gọn còn 350
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Visible = false 
 MainFrame.Active = true
@@ -32,10 +32,22 @@ spawn(function()
     end
 end)
 
-local function CreateToggle(name, pos, var)
-    local btn = Instance.new("TextButton", MainFrame)
+-- TẠO THANH CUỘN ĐỂ CHỨA NÚT (GIÚP GUI NGẮN)
+local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
+ScrollFrame.Size = UDim2.new(1, -10, 1, -50)
+ScrollFrame.Position = UDim2.new(0, 5, 0, 40)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 420) -- Độ dài để cuộn các nút
+ScrollFrame.ScrollBarThickness = 2
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+
+local UIListLayout = Instance.new("UIListLayout", ScrollFrame)
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function CreateToggle(name, var)
+    local btn = Instance.new("TextButton", ScrollFrame)
     btn.Size = UDim2.new(0, 260, 0, 45)
-    btn.Position = pos
     btn.Font = Enum.Font.GothamBold
     btn.Text = name .. ": TẮT"
     btn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
@@ -57,14 +69,14 @@ local function CreateToggle(name, pos, var)
     end)
 end
 
--- THÊM CÁC NÚT ĐIỀU KHIỂN
-CreateToggle("ESP Soi Vai Trò", UDim2.new(0, 20, 0, 20), "UseESP")
-CreateToggle("Chain Kill (Dịch Chuyển)", UDim2.new(0, 20, 0, 75), "UseMurd")
-CreateToggle("Kill Aura (Tầm Xa 400)", UDim2.new(0, 20, 0, 130), "UseAura")
-CreateToggle("Nhặt Súng Từ Xa", UDim2.new(0, 20, 0, 185), "UseLoot")
-CreateToggle("Kích Hoạt Bay (Fly)", UDim2.new(0, 20, 0, 240), "UseFly")
-CreateToggle("Auto Farm (Né SN 10 Stu)", UDim2.new(0, 20, 0, 295), "IsAutoFarming")
-CreateToggle("Chống Fling (Anti-Fling)", UDim2.new(0, 20, 0, 350), "AntiFling")
+-- THÊM CÁC NÚT VÀO THANH CUỘN (TỰ ĐỘNG XẾP HÀNG)
+CreateToggle("ESP Soi Vai Trò", "UseESP")
+CreateToggle("Chain Kill (Dịch Chuyển)", "UseMurd")
+CreateToggle("Kill Aura (Tầm Xa 400)", "UseAura")
+CreateToggle("Nhặt Súng Từ Xa", "UseLoot")
+CreateToggle("Kích Hoạt Bay (Fly)", "UseFly")
+CreateToggle("Auto Farm (Né SN 10 Stu)", "IsAutoFarming")
+CreateToggle("Chống Fling (Anti-Fling)", "AntiFling")
 
 -- 2. NÚT NEX (MINI BUTTON) - GIỮ NGUYÊN
 MiniButton.Name = "NEX_Modern_Toggle"
@@ -96,7 +108,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     MiniButton.Visible = true 
 end)
 
--- 3. HÀM TRỢ NĂNG (NÉ SN & QUÉT XU)
+-- 3. HÀM TRỢ NĂNG (GIỮ NGUYÊN)
 local function GetMurd()
     for _, p in pairs(game.Players:GetPlayers()) do
         if p.Character and (p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")) then
@@ -124,8 +136,7 @@ local function getTargetCoin()
     return nil
 end
 
--- 4. VÒNG LẶP CHỐNG FLING (ANTI-FLING LOGIC)
--- Cơ chế: Đặt Velocity của nhân vật về 0 liên tục để không bị đẩy văng
+-- 4. VÒNG LẶP CHỐNG FLING (GIỮ NGUYÊN)
 spawn(function()
     while task.wait() do
         if _G.AntiFling then
@@ -144,7 +155,7 @@ spawn(function()
     end
 end)
 
--- 5. VÒNG LẶP AUTO FARM (ĐÃ FIX CHỐNG KICK & NÉ SÁT NHÂN)
+-- 5. VÒNG LẶP AUTO FARM (GIỮ NGUYÊN)
 task.spawn(function()
     while true do
         task.wait(0.2)
@@ -154,13 +165,12 @@ task.spawn(function()
                 local char = lp.Character or lp.CharacterAdded:Wait()
                 local hrp = char:WaitForChild("HumanoidRootPart", 5)
                 
-                -- KIỂM TRA NÉ SÁT NHÂN TRONG PHẠM VI 10 STUDS
                 local murd = GetMurd()
                 if murd and murd.Character and murd.Character:FindFirstChild("HumanoidRootPart") then
                     local distM = (hrp.Position - murd.Character.HumanoidRootPart.Position).Magnitude
                     if distM < 10 then
                         if CurrentTween then CurrentTween:Cancel() end
-                        hrp.CFrame = hrp.CFrame * CFrame.new(0, 65, 0) -- Nhảy lên cao né chém
+                        hrp.CFrame = hrp.CFrame * CFrame.new(0, 65, 0)
                         task.wait(1)
                         return
                     end
@@ -180,7 +190,7 @@ task.spawn(function()
     end
 end)
 
--- 6. TOÀN BỘ LOGIC CŨ CỦA ÔNG (GIỮ NGUYÊN 100%)
+-- 6. TOÀN BỘ LOGIC CŨ (GIỮ NGUYÊN 100%)
 local function IsAdmin(player)
     if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then
         return true
