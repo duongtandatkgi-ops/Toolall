@@ -1,4 +1,4 @@
--- [[ TOOLALL MM2 - NEX HUB: MODERN MINI BUTTON EDITION ]]
+-- [[ TOOLALL MM2 - NEX HUB: ANTI-KICK & ANTI-FLING EDITION ]]
 local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
 local MainFrame = Instance.new("Frame", ScreenGui)
 local MiniButton = Instance.new("TextButton", ScreenGui) 
@@ -7,10 +7,16 @@ local MiniStroke = Instance.new("UIStroke", MiniButton)
 local MiniCorner = Instance.new("UICorner", MiniButton)
 local MiniGradient = Instance.new("UIGradient", MiniButton)
 
--- 1. GIAO DIỆN CHÍNH (GIỮ NGUYÊN)
+-- KHAI BÁO BIẾN CHO TÍNH NĂNG MỚI
+local TweenService = game:GetService("TweenService")
+local CurrentTween = nil
+_G.IsAutoFarming = false
+_G.AntiFling = false
+
+-- 1. GIAO DIỆN CHÍNH (ĐÃ TĂNG SIZE ĐỂ CHỨA THÊM NÚT)
 MainFrame.Name = "NEX_Final_Color"
-MainFrame.Size = UDim2.new(0, 300, 0, 390)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -195)
+MainFrame.Size = UDim2.new(0, 300, 0, 510) -- Tăng chiều cao
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -255)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Visible = false 
 MainFrame.Active = true
@@ -41,41 +47,41 @@ local function CreateToggle(name, pos, var)
         btn.BackgroundColor3 = _G[var] and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
         btn.Text = name .. (_G[var] and ": BẬT" or ": TẮT")
         
+        if var == "IsAutoFarming" and not _G[var] then
+            if CurrentTween then CurrentTween:Cancel() end
+        end
+
         if var == "UseFly" and _G.UseFly then
             loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Fly-V3-55253"))()
-        elseif var == "UseFly" and not _G.UseFly then
-            if game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                game.Players.LocalPlayer.Character.Humanoid.PlatformStand = false
-            end
         end
     end)
 end
 
-CreateToggle("ESP Soi Vai Trò", UDim2.new(0, 20, 0, 30), "UseESP")
-CreateToggle("Chain Kill (Dịch Chuyển)", UDim2.new(0, 20, 0, 90), "UseMurd")
-CreateToggle("Kill Aura (Tầm Xa 400)", UDim2.new(0, 20, 0, 150), "UseAura")
-CreateToggle("Nhặt Súng Từ Xa", UDim2.new(0, 20, 0, 210), "UseLoot")
-CreateToggle("Kích Hoạt Bay (Fly)", UDim2.new(0, 20, 0, 270), "UseFly")
+-- THÊM CÁC NÚT ĐIỀU KHIỂN
+CreateToggle("ESP Soi Vai Trò", UDim2.new(0, 20, 0, 20), "UseESP")
+CreateToggle("Chain Kill (Dịch Chuyển)", UDim2.new(0, 20, 0, 75), "UseMurd")
+CreateToggle("Kill Aura (Tầm Xa 400)", UDim2.new(0, 20, 0, 130), "UseAura")
+CreateToggle("Nhặt Súng Từ Xa", UDim2.new(0, 20, 0, 185), "UseLoot")
+CreateToggle("Kích Hoạt Bay (Fly)", UDim2.new(0, 20, 0, 240), "UseFly")
+CreateToggle("Auto Farm (Né SN 10 Stu)", UDim2.new(0, 20, 0, 295), "IsAutoFarming")
+CreateToggle("Chống Fling (Anti-Fling)", UDim2.new(0, 20, 0, 350), "AntiFling")
 
--- 2. NÚT NEX MODERNIZE (THAY ĐỔI TẠI ĐÂY)
+-- 2. NÚT NEX (MINI BUTTON) - GIỮ NGUYÊN
 MiniButton.Name = "NEX_Modern_Toggle"
-MiniButton.Size = UDim2.new(0, 60, 0, 60) -- Kích thước tròn
+MiniButton.Size = UDim2.new(0, 60, 0, 60)
 MiniButton.Position = UDim2.new(0, 20, 0.2, 0)
 MiniButton.BackgroundColor3 = Color3.new(1, 1, 1)
 MiniButton.Text = "NEX"
 MiniButton.TextColor3 = Color3.new(1, 1, 1)
 MiniButton.Font = Enum.Font.LuckiestGuy
 MiniButton.TextSize = 20
-MiniButton.Visible = true
 MiniButton.Draggable = true
-
-MiniCorner.CornerRadius = UDim.new(1, 0) -- Làm tròn hoàn toàn
+MiniCorner.CornerRadius = UDim.new(1, 0)
 MiniStroke.Thickness = 3
 MiniGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 50, 255)), -- Tím
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 200, 255))  -- Xanh biển
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 50, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(50, 200, 255))
 }
-
 MiniButton.MouseButton1Click:Connect(function() 
     MainFrame.Visible = not MainFrame.Visible
     MiniButton.Visible = not MainFrame.Visible
@@ -90,7 +96,91 @@ CloseBtn.MouseButton1Click:Connect(function()
     MiniButton.Visible = true 
 end)
 
--- 3. HÀM KIỂM TRA ADMIN (GIỮ NGUYÊN)
+-- 3. HÀM TRỢ NĂNG (NÉ SN & QUÉT XU)
+local function GetMurd()
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p.Character and (p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")) then
+            return p
+        end
+    end
+    return nil
+end
+
+local function getTargetCoin()
+    local coins = {}
+    for _, v in pairs(workspace:GetDescendants()) do
+        if (v.Name == "CoinVisual" or v.Name == "GoldCoin" or v:FindFirstChild("CoinVisual")) and v:IsA("BasePart") then
+            if v:FindFirstChild("TouchInterest") or v.Parent:FindFirstChild("TouchInterest") then
+                table.insert(coins, v)
+            end
+        end
+    end
+    if #coins > 0 then
+        table.sort(coins, function(a, b)
+            return (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - a.Position).Magnitude < (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - b.Position).Magnitude
+        end)
+        return coins[1]
+    end
+    return nil
+end
+
+-- 4. VÒNG LẶP CHỐNG FLING (ANTI-FLING LOGIC)
+-- Cơ chế: Đặt Velocity của nhân vật về 0 liên tục để không bị đẩy văng
+spawn(function()
+    while task.wait() do
+        if _G.AntiFling then
+            pcall(function()
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    for _, v in pairs(char:GetChildren()) do
+                        if v:IsA("BasePart") then
+                            v.Velocity = Vector3.new(0, 0, 0)
+                            v.RotVelocity = Vector3.new(0, 0, 0)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- 5. VÒNG LẶP AUTO FARM (ĐÃ FIX CHỐNG KICK & NÉ SÁT NHÂN)
+task.spawn(function()
+    while true do
+        task.wait(0.2)
+        if _G.IsAutoFarming then
+            pcall(function()
+                local lp = game.Players.LocalPlayer
+                local char = lp.Character or lp.CharacterAdded:Wait()
+                local hrp = char:WaitForChild("HumanoidRootPart", 5)
+                
+                -- KIỂM TRA NÉ SÁT NHÂN TRONG PHẠM VI 10 STUDS
+                local murd = GetMurd()
+                if murd and murd.Character and murd.Character:FindFirstChild("HumanoidRootPart") then
+                    local distM = (hrp.Position - murd.Character.HumanoidRootPart.Position).Magnitude
+                    if distM < 10 then
+                        if CurrentTween then CurrentTween:Cancel() end
+                        hrp.CFrame = hrp.CFrame * CFrame.new(0, 65, 0) -- Nhảy lên cao né chém
+                        task.wait(1)
+                        return
+                    end
+                end
+
+                local target = getTargetCoin()
+                if target and _G.IsAutoFarming then
+                    local dist = (hrp.Position - target.Position).Magnitude
+                    local info = TweenInfo.new(dist / 28, Enum.EasingStyle.Linear)
+                    CurrentTween = TweenService:Create(hrp, info, {CFrame = target.CFrame})
+                    CurrentTween:Play()
+                    CurrentTween.Completed:Wait()
+                    task.wait(math.random(1, 3) / 10)
+                end
+            end)
+        end
+    end
+end)
+
+-- 6. TOÀN BỘ LOGIC CŨ CỦA ÔNG (GIỮ NGUYÊN 100%)
 local function IsAdmin(player)
     if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then
         return true
@@ -98,7 +188,6 @@ local function IsAdmin(player)
     return false
 end
 
--- 4. VÒNG LẶP XỬ LÝ CHÍNH (GIỮ NGUYÊN TOÀN BỘ)
 spawn(function()
     while task.wait(0.01) do
         pcall(function()
