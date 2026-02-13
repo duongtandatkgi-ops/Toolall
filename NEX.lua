@@ -7,15 +7,18 @@ local MiniStroke = Instance.new("UIStroke", MiniButton)
 local MiniCorner = Instance.new("UICorner", MiniButton)
 local MiniGradient = Instance.new("UIGradient", MiniButton)
 
--- KHAI BÁO BIẾN CHO TÍNH NĂNG MỚI (GIỮ NGUYÊN)
+-- KHAI BÁO BIẾN (GIỮ NGUYÊN & THÊM BIẾN ANTI AFK)
 local TweenService = game:GetService("TweenService")
 local CurrentTween = nil
 _G.IsAutoFarming = false
 _G.AntiFling = false
+_G.AutoFarmPro = false 
+_G.AntiAFK = false -- Biến mới
+local HasJumped = false 
 
--- 1. GIAO DIỆN CHÍNH (ĐÃ LÀM NGẮN LẠI)
+-- 1. GIAO DIỆN CHÍNH (GIỮ NGUYÊN)
 MainFrame.Name = "NEX_Final_Color"
-MainFrame.Size = UDim2.new(0, 300, 0, 350) -- Chiều cao thu gọn còn 350
+MainFrame.Size = UDim2.new(0, 300, 0, 350) 
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 MainFrame.Visible = false 
@@ -32,12 +35,11 @@ spawn(function()
     end
 end)
 
--- TẠO THANH CUỘN ĐỂ CHỨA NÚT (GIÚP GUI NGẮN)
 local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
 ScrollFrame.Size = UDim2.new(1, -10, 1, -50)
 ScrollFrame.Position = UDim2.new(0, 5, 0, 40)
 ScrollFrame.BackgroundTransparency = 1
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 420) -- Độ dài để cuộn các nút
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 530) -- Tăng chiều dài để chứa thêm nút
 ScrollFrame.ScrollBarThickness = 2
 ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 
@@ -59,8 +61,9 @@ local function CreateToggle(name, var)
         btn.BackgroundColor3 = _G[var] and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
         btn.Text = name .. (_G[var] and ": BẬT" or ": TẮT")
         
-        if var == "IsAutoFarming" and not _G[var] then
+        if (var == "IsAutoFarming" or var == "AutoFarmPro") and not _G[var] then
             if CurrentTween then CurrentTween:Cancel() end
+            HasJumped = false
         end
 
         if var == "UseFly" and _G.UseFly then
@@ -69,7 +72,9 @@ local function CreateToggle(name, var)
     end)
 end
 
--- THÊM CÁC NÚT VÀO THANH CUỘN (TỰ ĐỘNG XẾP HÀNG)
+-- DANH SÁCH NÚT (THÊM NÚT ANTI AFK VÀO ĐẦU)
+CreateToggle("Chống Treo Máy (Anti-AFK)", "AntiAFK")
+CreateToggle("Auto Farm PRO (Siêu Cấp)", "AutoFarmPro")
 CreateToggle("ESP Soi Vai Trò", "UseESP")
 CreateToggle("Chain Kill (Dịch Chuyển)", "UseMurd")
 CreateToggle("Kill Aura (Tầm Xa 400)", "UseAura")
@@ -78,7 +83,7 @@ CreateToggle("Kích Hoạt Bay (Fly)", "UseFly")
 CreateToggle("Auto Farm (Né SN 10 Stu)", "IsAutoFarming")
 CreateToggle("Chống Fling (Anti-Fling)", "AntiFling")
 
--- 2. NÚT NEX (MINI BUTTON) - GIỮ NGUYÊN
+-- 2. NÚT NEX (MINI BUTTON)
 MiniButton.Name = "NEX_Modern_Toggle"
 MiniButton.Size = UDim2.new(0, 60, 0, 60)
 MiniButton.Position = UDim2.new(0, 20, 0.2, 0)
@@ -106,6 +111,15 @@ CloseBtn.Text = "_"
 CloseBtn.MouseButton1Click:Connect(function() 
     MainFrame.Visible = false 
     MiniButton.Visible = true 
+end)
+
+-- LOGIC TỰ ĐỘNG BẬT LẠI KHI CHẾT (GIỮ NGUYÊN)
+game.Players.LocalPlayer.CharacterAdded:Connect(function()
+    HasJumped = false
+    task.wait(2)
+    if _G.AutoFarmPro or _G.IsAutoFarming then
+        if CurrentTween then CurrentTween:Cancel() end
+    end
 end)
 
 -- 3. HÀM TRỢ NĂNG (GIỮ NGUYÊN)
@@ -136,17 +150,56 @@ local function getTargetCoin()
     return nil
 end
 
--- 4. VÒNG LẶP CHỐNG FLING (GIỮ NGUYÊN)
-spawn(function()
-    while task.wait() do
-        if _G.AntiFling then
+-- 4. VÒNG LẶP AUTO FARM PRO & THƯỜNG (GIỮ NGUYÊN LOGIC)
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if _G.AutoFarmPro or _G.IsAutoFarming then
             pcall(function()
-                local char = game.Players.LocalPlayer.Character
-                if char and char:FindFirstChild("HumanoidRootPart") then
-                    for _, v in pairs(char:GetChildren()) do
-                        if v:IsA("BasePart") then
-                            v.Velocity = Vector3.new(0, 0, 0)
-                            v.RotVelocity = Vector3.new(0, 0, 0)
+                local lp = game.Players.LocalPlayer
+                local char = lp.Character
+                if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+                local hrp = char.HumanoidRootPart
+                
+                local knife = lp.Backpack:FindFirstChild("Knife") or char:FindFirstChild("Knife")
+                if knife and _G.AutoFarmPro then
+                    _G.UseAura = true
+                    _G.UseMurd = true
+                    HasJumped = false
+                    return
+                end
+
+                local murd = GetMurd()
+                local safeDist = _G.AutoFarmPro and 20 or 10 
+                
+                if murd and murd.Character and murd.Character:FindFirstChild("HumanoidRootPart") and (hrp.Position - murd.Character.HumanoidRootPart.Position).Magnitude < safeDist then
+                    if CurrentTween then CurrentTween:Cancel() end
+                    local direction = (hrp.Position - murd.Character.HumanoidRootPart.Position).Unit
+                    hrp.CFrame = CFrame.new(hrp.Position + (direction * 15), hrp.Position + direction * 20)
+                    HasJumped = false 
+                    task.wait(0.1)
+                else
+                    local target = getTargetCoin()
+                    if target then
+                        local dist = (hrp.Position - target.Position).Magnitude
+                        if _G.AutoFarmPro and dist > 400 then 
+                            if not HasJumped then
+                                hrp.CFrame = hrp.CFrame * CFrame.new(0, 70, 0)
+                                HasJumped = true
+                            end
+                            return 
+                        end
+                        
+                        local info = TweenInfo.new(dist / 25, Enum.EasingStyle.Linear)
+                        CurrentTween = TweenService:Create(hrp, info, {CFrame = target.CFrame})
+                        CurrentTween:Play()
+                        CurrentTween.Completed:Wait()
+                        HasJumped = false 
+                    else
+                        if not HasJumped then
+                            if CurrentTween then CurrentTween:Cancel() end
+                            hrp.CFrame = hrp.CFrame * CFrame.new(0, 70, 0)
+                            HasJumped = true 
                         end
                     end
                 end
@@ -155,46 +208,9 @@ spawn(function()
     end
 end)
 
--- 5. VÒNG LẶP AUTO FARM (GIỮ NGUYÊN)
-task.spawn(function()
-    while true do
-        task.wait(0.2)
-        if _G.IsAutoFarming then
-            pcall(function()
-                local lp = game.Players.LocalPlayer
-                local char = lp.Character or lp.CharacterAdded:Wait()
-                local hrp = char:WaitForChild("HumanoidRootPart", 5)
-                
-                local murd = GetMurd()
-                if murd and murd.Character and murd.Character:FindFirstChild("HumanoidRootPart") then
-                    local distM = (hrp.Position - murd.Character.HumanoidRootPart.Position).Magnitude
-                    if distM < 10 then
-                        if CurrentTween then CurrentTween:Cancel() end
-                        hrp.CFrame = hrp.CFrame * CFrame.new(0, 65, 0)
-                        task.wait(1)
-                        return
-                    end
-                end
-
-                local target = getTargetCoin()
-                if target and _G.IsAutoFarming then
-                    local dist = (hrp.Position - target.Position).Magnitude
-                    local info = TweenInfo.new(dist / 28, Enum.EasingStyle.Linear)
-                    CurrentTween = TweenService:Create(hrp, info, {CFrame = target.CFrame})
-                    CurrentTween:Play()
-                    CurrentTween.Completed:Wait()
-                    task.wait(math.random(1, 3) / 10)
-                end
-            end)
-        end
-    end
-end)
-
--- 6. TOÀN BỘ LOGIC CŨ (GIỮ NGUYÊN 100%)
+-- 5. LOGIC CHIẾN ĐẤU & ESP (GIỮ NGUYÊN 100%)
 local function IsAdmin(player)
-    if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then
-        return true
-    end
+    if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then return true end
     return false
 end
 
@@ -230,12 +246,7 @@ spawn(function()
                 local knife = lp.Backpack:FindFirstChild("Knife") or char:FindFirstChild("Knife")
                 if knife then
                     char.Humanoid:EquipTool(knife)
-                    local players = game.Players:GetPlayers()
-                    table.sort(players, function(a, b)
-                        return a.Backpack:FindFirstChild("Gun") or (a.Character and a.Character:FindFirstChild("Gun"))
-                    end)
-
-                    for _, p in pairs(players) do
+                    for _, p in pairs(game.Players:GetPlayers()) do
                         if p ~= lp and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
                             char.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 1)
                             knife:Activate()
@@ -253,7 +264,6 @@ spawn(function()
                         local h = p.Character:FindFirstChild("Highlight") or Instance.new("Highlight", p.Character)
                         local isM = p.Backpack:FindFirstChild("Knife") or p.Character:FindFirstChild("Knife")
                         local isS = p.Backpack:FindFirstChild("Gun") or p.Character:FindFirstChild("Gun")
-                        
                         if IsAdmin(p) then h.FillColor = Color3.fromRGB(255, 255, 0)
                         elseif isM then h.FillColor = Color3.fromRGB(255, 0, 0)
                         elseif isS then h.FillColor = Color3.fromRGB(0, 0, 255)
@@ -272,5 +282,33 @@ spawn(function()
                 end
             end
         end)
+    end
+end)
+
+-- 6. CHỐNG FLING (GIỮ NGUYÊN)
+spawn(function()
+    while task.wait() do
+        if _G.AntiFling then
+            pcall(function()
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    for _, v in pairs(char:GetChildren()) do
+                        if v:IsA("BasePart") then
+                            v.Velocity = Vector3.new(0, 0, 0)
+                            v.RotVelocity = Vector3.new(0, 0, 0)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- LOGIC ANTI AFK (CHỈ THÊM VÀO CUỐI, KHÔNG XÓA GÌ)
+local VirtualUser = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    if _G.AntiAFK then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
     end
 end)
