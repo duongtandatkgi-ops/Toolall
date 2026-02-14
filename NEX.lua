@@ -7,16 +7,17 @@ local MiniStroke = Instance.new("UIStroke", MiniButton)
 local MiniCorner = Instance.new("UICorner", MiniButton)
 local MiniGradient = Instance.new("UIGradient", MiniButton)
 
--- KHAI BÁO BIẾN (GIỮ NGUYÊN & THÊM BIẾN ANTI AFK)
+-- KHAI BÁO BIẾN (GIỮ NGUYÊN & ĐẢM BẢO ANTI AFK HOẠT ĐỘNG)
 local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
 local CurrentTween = nil
 _G.IsAutoFarming = false
 _G.AntiFling = false
 _G.AutoFarmPro = false 
-_G.AntiAFK = false -- Biến mới
+_G.AntiAFK = false 
 local HasJumped = false 
 
--- 1. GIAO DIỆN CHÍNH (GIỮ NGUYÊN)
+-- 1. GIAO DIỆN CHÍNH
 MainFrame.Name = "NEX_Final_Color"
 MainFrame.Size = UDim2.new(0, 300, 0, 350) 
 MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
@@ -39,7 +40,7 @@ local ScrollFrame = Instance.new("ScrollingFrame", MainFrame)
 ScrollFrame.Size = UDim2.new(1, -10, 1, -50)
 ScrollFrame.Position = UDim2.new(0, 5, 0, 40)
 ScrollFrame.BackgroundTransparency = 1
-ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 530) -- Tăng chiều dài để chứa thêm nút
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 530)
 ScrollFrame.ScrollBarThickness = 2
 ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 
@@ -72,7 +73,7 @@ local function CreateToggle(name, var)
     end)
 end
 
--- DANH SÁCH NÚT (THÊM NÚT ANTI AFK VÀO ĐẦU)
+-- DANH SÁCH NÚT
 CreateToggle("Chống Treo Máy (Anti-AFK)", "AntiAFK")
 CreateToggle("Auto Farm PRO (Siêu Cấp)", "AutoFarmPro")
 CreateToggle("ESP Soi Vai Trò", "UseESP")
@@ -113,7 +114,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     MiniButton.Visible = true 
 end)
 
--- LOGIC TỰ ĐỘNG BẬT LẠI KHI CHẾT (GIỮ NGUYÊN)
+-- LOGIC TỰ ĐỘNG BẬT LẠI KHI CHẾT
 game.Players.LocalPlayer.CharacterAdded:Connect(function()
     HasJumped = false
     task.wait(2)
@@ -150,7 +151,7 @@ local function getTargetCoin()
     return nil
 end
 
--- 4. VÒNG LẶP AUTO FARM PRO & THƯỜNG (GIỮ NGUYÊN LOGIC)
+-- 4. VÒNG LẶP AUTO FARM
 task.spawn(function()
     while true do
         task.wait(0.1)
@@ -208,7 +209,7 @@ task.spawn(function()
     end
 end)
 
--- 5. LOGIC CHIẾN ĐẤU & ESP (GIỮ NGUYÊN 100%)
+-- 5. LOGIC CHIẾN ĐẤU & ESP
 local function IsAdmin(player)
     if player:GetRankInGroup(2913303) >= 100 or player.UserId == 16122546 or player.UserId == 27268945 then return true end
     return false
@@ -285,7 +286,7 @@ spawn(function()
     end
 end)
 
--- 6. CHỐNG FLING (GIỮ NGUYÊN)
+-- 6. CHỐNG FLING
 spawn(function()
     while task.wait() do
         if _G.AntiFling then
@@ -304,11 +305,30 @@ spawn(function()
     end
 end)
 
--- LOGIC ANTI AFK (CHỈ THÊM VÀO CUỐI, KHÔNG XÓA GÌ)
-local VirtualUser = game:GetService("VirtualUser")
+-- [[ TỐI ƯU ANTI-AFK: ĐẢM BẢO KHÔNG BỊ KICK 20 PHÚT ]]
+task.spawn(function()
+    while task.wait(30) do -- Cứ mỗi 30 giây kiểm tra một lần
+        if _G.AntiAFK then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new()) -- Click chuột phải ảo
+                -- Thêm một hành động nhảy nhẹ nếu đang không Auto Farm để server thấy có chuyển động
+                if not _G.IsAutoFarming and not _G.AutoFarmPro then
+                    local lp = game.Players.LocalPlayer
+                    if lp.Character and lp.Character:FindFirstChild("Humanoid") then
+                        lp.Character.Humanoid.Jump = true
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+-- Chặn sự kiện Idled mặc định của Roblox
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     if _G.AntiAFK then
-        VirtualUser:CaptureController()
-        VirtualUser:ClickButton2(Vector2.new())
+        VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        task.wait(1)
+        VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
     end
 end)
