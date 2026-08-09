@@ -2,6 +2,35 @@
 if not game:IsLoaded() then game.Loaded:Wait() end
 repeat task.wait() until game.Players.LocalPlayer and game.Players.LocalPlayer.Character
 
+-- ==========================================
+-- AUTO QUICK-LOAD ON SERVER HOP (AUTOEXEC)
+-- ==========================================
+if queue_on_teleport then
+    queue_on_teleport('loadstring(game:HttpGet("https://raw.githubusercontent.com/duongtandatkgi-ops/Toolall/refs/heads/main/NEX1.lua"))()')
+end
+-- ==========================================
+
+-- ==========================================
+-- AUTO CHỌN PHE HẢI TẶC (PIRATES)
+-- ==========================================
+task.spawn(function()
+    pcall(function()
+        -- Gửi Analytics (OnAnalyticsActivity)
+        local args1 = {
+            "TeamSelect/Team/Pirates"
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Modules", 9e9):WaitForChild("Net", 9e9):WaitForChild("RE/OnAnalyticsActivity", 9e9):FireServer(unpack(args1))
+        
+        -- Chọn Team (CommF_)
+        local args2 = {
+            "SetTeam2",
+            "Pirates"
+        }
+        game:GetService("ReplicatedStorage"):WaitForChild("Remotes", 9e9):WaitForChild("CommF_", 9e9):InvokeServer(unpack(args2))
+    end)
+end)
+-- ==========================================
+
 -- 1. HỆ THỐNG LƯU TRẠNG THÁI
 local folder, file = "NEX_HUB_DATA", "SniperV10_Config.json"
 if not isfolder(folder) then makefolder(folder) end
