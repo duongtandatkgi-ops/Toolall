@@ -1,0 +1,21 @@
+import cv2, json
+
+cap = cv2.VideoCapture("video_cua_ban.mp4")
+width, height = 20, 20
+data = {"fps": 10, "frames": []}
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret: break
+    frame = cv2.resize(frame, (width, height))
+    pixels = []
+    for y in range(height):
+        for x in range(width):
+            b, g, r = frame[y, x]
+            # Lưu định dạng nhẹ: [x, y, r, g, b]
+            pixels.append([x + 1, y + 1, int(r), int(g), int(b)])
+    data["frames"].append(pixels)
+
+cap.release()
+with open("video_data.json", "w") as f:
+    json.dump(data, f)
